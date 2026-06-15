@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-MiniBrowser - A simple educational web browser
+MiniBrowser - A simple educational web browser with Game Library
 Built with Python, tkinter, requests, and BeautifulSoup
 
 This project teaches core browser concepts:
@@ -9,6 +9,7 @@ This project teaches core browser concepts:
 - GUI event handling
 - History management
 - Basic persistence
+- Game library integration
 """
 
 import tkinter as tk
@@ -19,7 +20,7 @@ from urllib.parse import urljoin, urlparse
 import json
 import os
 from datetime import datetime
-import webbrowser  # Added to launch external games and pages cleanly
+import webbrowser
 
 
 class MiniBrowser:
@@ -36,6 +37,22 @@ class MiniBrowser:
         self.bookmarks_file = "bookmarks.json"
         self.bookmarks = self.load_bookmarks()
         self.link_map = {}         # For sidebar: listbox index -> full URL
+        
+        # Game library
+        self.games_library = [
+            {
+                "title": "BrawlGO",
+                "description": "Multiplayer fighting game",
+                "url": "https://koustavxd.itch.io/brawlgo",
+                "icon": "🎮"
+            },
+            {
+                "title": "Example Game",
+                "description": "Your other games here",
+                "url": "https://itch.io",
+                "icon": "🕹️"
+            }
+        ]
 
         # Variables for UI binding
         self.url_var = tk.StringVar()
@@ -126,13 +143,9 @@ class MiniBrowser:
         self.go_btn = ttk.Button(url_frame, text="Go", command=self.on_url_enter, width=6)
         self.go_btn.pack(side=tk.LEFT, padx=2)
 
-        # Custom Launcher for your Multiplayer Game
-        def launch_brawlgo():
-            webbrowser.open("https://koustavxd.itch.io/brawlgo")
-            self.status_var.set("Launching BrawlGO in your default system browser...")
-
-        self.game_btn = ttk.Button(toolbar, text="🎮 Play BrawlGO", command=launch_brawlgo)
-        self.game_btn.pack(side=tk.RIGHT, padx=5)
+        # Game Library button
+        self.game_library_btn = ttk.Button(toolbar, text="🎮 Game Library", command=self.show_game_library)
+        self.game_library_btn.pack(side=tk.RIGHT, padx=5)
 
         # Bookmark button
         self.bookmark_btn = ttk.Button(toolbar, text="★ Bookmark", command=self.add_bookmark)
@@ -203,6 +216,63 @@ class MiniBrowser:
             padding=5
         )
         self.status_label.pack(fill=tk.X, expand=True)
+
+    # ==================== Game Library ====================
+
+    def show_game_library(self):
+        """Display game library in a new window."""
+        win = tk.Toplevel(self.root)
+        win.title("Game Library")
+        win.geometry("600x400")
+        win.transient(self.root)
+
+        ttk.Label(win, text="🎮 Your Game Library", font=("Helvetica", 14, "bold")).pack(pady=10)
+
+        # Create scrollable frame for games
+        canvas = tk.Canvas(win, bg="#f8f9fa")
+        scrollbar = ttk.Scrollbar(win, orient=tk.VERTICAL, command=canvas.yview)
+        scrollable_frame = ttk.Frame(canvas)
+
+        scrollable_frame.bind(
+            "<Configure>",
+            lambda e: canvas.configure(scrollregion=canvas.bbox("all"))
+        )
+
+        canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
+        canvas.configure(yscrollcommand=scrollbar.set)
+
+        # Add game buttons
+        for game in self.games_library:
+            game_frame = ttk.LabelFrame(scrollable_frame, text=f"{game['icon']} {game['title']}", padding=10)
+            game_frame.pack(fill=tk.X, padx=10, pady=8)
+
+            ttk.Label(game_frame, text=game['description'], font=("Helvetica", 10)).pack(anchor=tk.W)
+
+            button_frame = ttk.Frame(game_frame)
+            button_frame.pack(fill=tk.X, pady=(8, 0))
+
+            ttk.Button(
+                button_frame,
+                text="▶ Play in Browser",
+                command=lambda url=game['url']: self.play_game(url, win)
+            ).pack(side=tk.LEFT, padx=5)
+
+            ttk.Button(
+                button_frame,
+                text="🔗 Open External",
+                command=lambda url=game['url']: webbrowser.open(url)
+            ).pack(side=tk.LEFT, padx=5)
+
+        canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+
+        # Close button
+        ttk.Button(win, text="Close", command=win.destroy).pack(pady=10)
+
+    def play_game(self, game_url, window):
+        """Load game in the browser and close the game library window."""
+        window.destroy()
+        self.navigate_to(game_url, add_to_history=True)
 
     # ==================== Core Browser Logic ====================
 
@@ -480,10 +550,11 @@ class MiniBrowser:
                 messagebox.showerror("Save Error", str(e))
 
     def show_about(self):
-        about_text = """MiniBrowser v1.0
+        about_text = """MiniBrowser v2.0
 
 An educational web browser built to demonstrate
 how browsers fetch, parse, and display web content.
+Now with Game Library integration!
 
 Created as a learning project using:
 • Python + tkinter (GUI)
@@ -492,6 +563,12 @@ Created as a learning project using:
 
 This browser is intentionally simple (text-only)
 to help you understand core concepts clearly.
+
+Features:
+✓ URL Navigation & History
+✓ Bookmarks Management
+✓ Game Library Browser
+✓ Link Discovery
 
 Enjoy exploring!"""
 
@@ -526,9 +603,19 @@ Enjoy exploring!"""
    - Stored in a plain JSON file for easy editing.
    - Menu and dedicated window for management.
 
+6. GAME LIBRARY
+   - Browse and play games directly in the browser.
+   - Each game can be launched in-browser or externally.
+
 This is similar to how real browsers work, but without
 a rendering engine (Blink/WebKit), JavaScript, or CSS.
 
 Want to extend it? Add tabs, caching, or a search feature!"""
 
-        messagebox.showinfo("How
+        messagebox.showinfo("How MiniBrowser Works", info)
+
+
+if __name__ == "__main__":
+    root = tk.Tk()
+    app = MiniBrowser(root)
+    root.mainloop()
