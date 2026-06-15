@@ -19,6 +19,7 @@ from urllib.parse import urljoin, urlparse
 import json
 import os
 from datetime import datetime
+import webbrowser  # Added to launch external games and pages cleanly
 
 
 class MiniBrowser:
@@ -124,6 +125,14 @@ class MiniBrowser:
 
         self.go_btn = ttk.Button(url_frame, text="Go", command=self.on_url_enter, width=6)
         self.go_btn.pack(side=tk.LEFT, padx=2)
+
+        # Custom Launcher for your Multiplayer Game
+        def launch_brawlgo():
+            webbrowser.open("https://koustavxd.itch.io/brawlgo")
+            self.status_var.set("Launching BrawlGO in your default system browser...")
+
+        self.game_btn = ttk.Button(toolbar, text="🎮 Play BrawlGO", command=launch_brawlgo)
+        self.game_btn.pack(side=tk.RIGHT, padx=5)
 
         # Bookmark button
         self.bookmark_btn = ttk.Button(toolbar, text="★ Bookmark", command=self.add_bookmark)
@@ -522,14 +531,4 @@ a rendering engine (Blink/WebKit), JavaScript, or CSS.
 
 Want to extend it? Add tabs, caching, or a search feature!"""
 
-        messagebox.showinfo("How it Works", info)
-
-
-def main():
-    root = tk.Tk()
-    app = MiniBrowser(root)
-    root.mainloop()
-
-
-if __name__ == "__main__":
-    main()
+        messagebox.showinfo("How
